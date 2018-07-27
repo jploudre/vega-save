@@ -1,0 +1,17 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+# command to install dependencies
+install:
+  - pip install .
+  - pip install -r requirements.txt
+  - pip install codecov
+# command to _save tests
+script:
+  - pylint --ignore-patterns=test* vegasave || [[ $? == 0 || $? -ge 8 ]]
+  - python -m pytest . --cov=vegasave --cov-report term-missing --cov-report xml
+after_success:
+  - codecov
