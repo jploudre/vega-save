@@ -1,0 +1,312 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "autosize": "pad",
+  "background": "#FFFFFF",
+  "padding": 5,
+  "width": 800,
+  "title": {"anchor": "start", "text": "Example1"},
+  "style": "cell",
+  "data": [
+    {"name": "selector003_store"},
+    {
+      "name": "source_0",
+      "values": [
+        {
+          "State": "Awake",
+          "end": "2017-01-05",
+          "start": "2017-01-01",
+          "task": "A"
+        },
+        {
+          "State": "Sleeping",
+          "end": "2017-01-07",
+          "start": "2017-01-05",
+          "task": "A"
+        },
+        {
+          "State": "Awake",
+          "end": "2017-01-08",
+          "start": "2017-01-05",
+          "task": "B"
+        },
+        {
+          "State": "Sleeping",
+          "end": "2017-01-10",
+          "start": "2017-01-04",
+          "task": "C"
+        }
+      ]
+    },
+    {
+      "name": "data_0",
+      "source": "source_0",
+      "transform": [
+        {"type": "formula", "expr": "toDate(datum[\"start\"])", "as": "start"},
+        {"type": "formula", "expr": "toDate(datum[\"end\"])", "as": "end"},
+        {
+          "type": "formula",
+          "as": "yearmonthdate_start",
+          "expr": "datetime(year(datum[\"start\"]), month(datum[\"start\"]), date(datum[\"start\"]), 0, 0, 0, 0)"
+        },
+        {
+          "type": "formula",
+          "as": "yearmonthdate_end",
+          "expr": "datetime(year(datum[\"end\"]), month(datum[\"end\"]), date(datum[\"end\"]), 0, 0, 0, 0)"
+        },
+        {
+          "type": "filter",
+          "expr": "datum[\"yearmonthdate_start\"] !== null && !isNaN(datum[\"yearmonthdate_start\"])"
+        }
+      ]
+    }
+  ],
+  "signals": [
+    {"name": "y_step", "value": 21},
+    {
+      "name": "height",
+      "update": "bandspace(domain('y').length, 0.1, 0.05) * y_step"
+    },
+    {
+      "name": "unit",
+      "value": {},
+      "on": [
+        {"events": "mousemove", "update": "isTuple(group()) ? group() : unit"}
+      ]
+    },
+    {
+      "name": "selector003_yearmonthdate_start",
+      "on": [
+        {
+          "events": {"signal": "selector003_translate_delta"},
+          "update": "panLinear(selector003_translate_anchor.extent_x, -selector003_translate_delta.x / width)"
+        },
+        {
+          "events": {"signal": "selector003_zoom_delta"},
+          "update": "zoomLinear(domain(\"x\"), selector003_zoom_anchor.x, selector003_zoom_delta)"
+        }
+      ]
+    },
+    {
+      "name": "selector003_task",
+      "on": [
+        {
+          "events": {"signal": "selector003_translate_delta"},
+          "update": "panLinear(selector003_translate_anchor.extent_y, selector003_translate_delta.y / height)"
+        },
+        {
+          "events": {"signal": "selector003_zoom_delta"},
+          "update": "zoomLinear(domain(\"y\"), selector003_zoom_anchor.y, selector003_zoom_delta)"
+        }
+      ]
+    },
+    {
+      "name": "selector003_tuple",
+      "on": [
+        {
+          "events": [
+            {"signal": "selector003_yearmonthdate_start"},
+            {"signal": "selector003_task"}
+          ],
+          "update": "selector003_yearmonthdate_start && selector003_task ? {unit: \"\", intervals: [{encoding: \"x\", field: \"yearmonthdate_start\", extent: selector003_yearmonthdate_start}, {encoding: \"y\", field: \"task\", extent: selector003_task}]} : null"
+        }
+      ]
+    },
+    {
+      "name": "selector003_translate_anchor",
+      "value": {},
+      "on": [
+        {
+          "events": [{"source": "scope", "type": "mousedown"}],
+          "update": "{x: x(unit), y: y(unit), extent_x: domain(\"x\"), extent_y: domain(\"y\")}"
+        }
+      ]
+    },
+    {
+      "name": "selector003_translate_delta",
+      "value": {},
+      "on": [
+        {
+          "events": [
+            {
+              "source": "window",
+              "type": "mousemove",
+              "consume": true,
+              "between": [
+                {"source": "scope", "type": "mousedown"},
+                {"source": "window", "type": "mouseup"}
+              ]
+            }
+          ],
+          "update": "{x: selector003_translate_anchor.x - x(unit), y: selector003_translate_anchor.y - y(unit)}"
+        }
+      ]
+    },
+    {
+      "name": "selector003_zoom_anchor",
+      "on": [
+        {
+          "events": [{"source": "scope", "type": "wheel", "consume": true}],
+          "update": "{x: invert(\"x\", x(unit)), y: invert(\"y\", y(unit))}"
+        }
+      ]
+    },
+    {
+      "name": "selector003_zoom_delta",
+      "on": [
+        {
+          "events": [{"source": "scope", "type": "wheel", "consume": true}],
+          "force": true,
+          "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
+        }
+      ]
+    },
+    {
+      "name": "selector003_modify",
+      "on": [
+        {
+          "events": {"signal": "selector003_tuple"},
+          "update": "modify(\"selector003_store\", selector003_tuple, true)"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks",
+      "type": "rect",
+      "clip": true,
+      "style": ["bar"],
+      "from": {"data": "data_0"},
+      "encode": {
+        "update": {
+          "fill": {"scale": "color", "field": "State"},
+          "tooltip": {
+            "signal": "{\"yearmonthdate_start\": timeFormat(datum[\"yearmonthdate_start\"], '%b %d, %Y'), \"yearmonthdate_end\": timeFormat(datum[\"yearmonthdate_end\"], '%b %d, %Y'), \"State\": ''+datum[\"State\"]}"
+          },
+          "x": {"scale": "x", "field": "yearmonthdate_start"},
+          "x2": {"scale": "x", "field": "yearmonthdate_end"},
+          "y": {"scale": "y", "field": "task"},
+          "height": {"scale": "y", "band": true}
+        }
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "time",
+      "domain": {
+        "data": "data_0",
+        "fields": ["yearmonthdate_start", "yearmonthdate_end"]
+      },
+      "domainRaw": {"signal": "selector003_yearmonthdate_start"},
+      "range": [0, {"signal": "width"}]
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "domain": {"data": "data_0", "field": "task", "sort": true},
+      "range": {"step": {"signal": "y_step"}},
+      "paddingInner": 0.1,
+      "paddingOuter": 0.05
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": ["Awake", "Sleeping"],
+      "range": ["#444444", "#bbbbbb"]
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "grid": false,
+      "title": "Date",
+      "labelFlush": true,
+      "labelOverlap": true,
+      "tickCount": {"signal": "ceil(width/40)"},
+      "encode": {
+        "labels": {
+          "update": {
+            "text": {"signal": "timeFormat(datum.value, '%Y-%m-%d')"},
+            "align": {"value": "center"},
+            "baseline": {"value": "top"}
+          }
+        }
+      },
+      "zindex": 1
+    },
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "grid": true,
+      "tickCount": {"signal": "ceil(width/40)"},
+      "gridScale": "y",
+      "domain": false,
+      "labels": false,
+      "maxExtent": 0,
+      "minExtent": 0,
+      "ticks": false,
+      "zindex": 0
+    },
+    {
+      "scale": "y",
+      "orient": "left",
+      "grid": false,
+      "title": "task",
+      "encode": {
+        "labels": {
+          "update": {
+            "align": {"value": "right"},
+            "baseline": {"value": "middle"}
+          }
+        }
+      },
+      "zindex": 1
+    },
+    {
+      "scale": "y",
+      "orient": "left",
+      "grid": true,
+      "gridScale": "x",
+      "domain": false,
+      "labels": false,
+      "maxExtent": 0,
+      "minExtent": 0,
+      "ticks": false,
+      "zindex": 0
+    }
+  ],
+  "legends": [
+    {
+      "fill": "color",
+      "title": "State",
+      "encode": {"symbols": {"update": {"shape": {"value": "square"}}}}
+    }
+  ],
+  "config": {
+    "axis": {
+      "labelAngle": 0,
+      "labelFontSize": 14,
+      "domain": false,
+      "grid": true,
+      "gridColor": "#FFFFFF",
+      "gridOpacity": 1,
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "tickColor": "#000000",
+      "tickSize": 5.67,
+      "titleFontSize": 16,
+      "titleFontWeight": "normal"
+    },
+    "axisY": {"minExtent": 30},
+    "legend": {
+      "labelBaseline": "middle",
+      "labelFontSize": 11,
+      "symbolSize": 40
+    },
+    "style": {"cell": {"fill": "#e5e5e5"}, "group-title": {"fontSize": 20}},
+    "background": "#FFFFFF"
+  }
+}

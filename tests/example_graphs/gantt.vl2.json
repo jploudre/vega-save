@@ -1,0 +1,124 @@
+{
+  "config": {
+    "axis": {
+      "labelAngle": 0.0,
+      "labelFontSize": 14,
+      "domain": false,
+      "grid": true,
+      "gridColor": "#FFFFFF",
+      "gridOpacity": 1,
+      "labelColor": "#000000",
+      "labelPadding": 4,
+      "tickColor": "#000000",
+      "tickSize": 5.67,
+      "titleFontSize": 16,
+      "titleFontWeight": "normal"
+    },
+    "background": "#FFFFFF",
+    "legend": {
+      "labelBaseline": "middle",
+      "labelFontSize": 11,
+      "symbolSize": 40
+    },
+    "title": {
+      "anchor": "start",
+      "fontSize": 20
+    },
+    "view": {
+      "fill": "#e5e5e5"
+    }
+  },
+  "data": {
+    "values": [
+      {
+        "State": "Awake",
+        "end": "2017-01-05",
+        "start": "2017-01-01",
+        "task": "A"
+      },
+      {
+        "State": "Sleeping",
+        "end": "2017-01-07",
+        "start": "2017-01-05",
+        "task": "A"
+      },
+      {
+        "State": "Awake",
+        "end": "2017-01-08",
+        "start": "2017-01-05",
+        "task": "B"
+      },
+      {
+        "State": "Sleeping",
+        "end": "2017-01-10",
+        "start": "2017-01-04",
+        "task": "C"
+      }
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "color": {
+      "type": "nominal",
+      "field": "State",
+      "scale": {
+        "domain": [
+          "Awake",
+          "Sleeping"
+        ],
+        "range": [
+          "#444444",
+          "#bbbbbb"
+        ],
+        "type": "ordinal"
+      }
+    },
+    "tooltip": [
+      {
+        "type": "temporal",
+        "field": "start",
+        "timeUnit": "yearmonthdate"
+      },
+      {
+        "type": "temporal",
+        "field": "end",
+        "timeUnit": "yearmonthdate"
+      },
+      {
+        "type": "nominal",
+        "field": "State"
+      }
+    ],
+    "x": {
+      "type": "temporal",
+      "axis": {
+        "format": "%Y-%m-%d",
+        "title": "Date"
+      },
+      "field": "start",
+      "timeUnit": "yearmonthdate"
+    },
+    "x2": {
+      "type": "temporal",
+      "field": "end",
+      "timeUnit": "yearmonthdate"
+    },
+    "y": {
+      "type": "nominal",
+      "field": "task"
+    }
+  },
+  "selection": {
+    "selector003": {
+      "type": "interval",
+      "bind": "scales",
+      "encodings": [
+        "x",
+        "y"
+      ]
+    }
+  },
+  "title": "Example1",
+  "width": 800,
+  "$schema": "https://vega.github.io/schema/vega-lite/v2.6.0.json"
+}
