@@ -31,7 +31,7 @@ version = re.search(
     re.M
 ).group(1)
 
-test_requirements=get_install_requirements("requirements_tests.txt")
+test_requirements=get_install_requirements("requirements_test.txt")
 
 setup(
     name="vega-save",
