@@ -9,6 +9,7 @@ import base64
 import json
 import os
 import six
+from contextlib import contextmanager
 
 from vegasave.vega_verisons import get_corresponding_vega_versions, get_corresponding_vega_lite_versions
 
@@ -106,58 +107,12 @@ def save_from_file(json_spec_file_name, save_location, **kwargs):
     save(data, save_location, **kwargs)
 
 
-def save(spec, file_name, mode=None, scale_factor=1, web_driver='chrome', driver_timeout=20,
-         vega_version=None, vega_lite_version=None, vega_embed_version=None):
-    """
-    Run your application.
-    :return:
-    """
-    print_version()
-    vega_version = '4.2.0'
-    vega_embed_version = '3.18.2'
-    vega_lite_version = '2.6.0'
-
-    # selenium is an optional dependency, so import it here
+@contextmanager
+def chart_driver(web_driver='chrome', driver_timeout=20):
     try:
         import selenium.webdriver
     except ImportError:
         raise ImportError("selenium package is required for saving chart as {0}".format(supported_file_formats))
-
-    if not isinstance(file_name, six.string_types):
-        raise ValueError("Must specify file name: {}".format(supported_file_formats))
-
-    render_format = file_name.split('.')[-1]
-    if render_format not in supported_file_formats:
-        raise NotImplementedError("File extension (render_format) must be one of the following:"
-                                  " {}".format(supported_file_formats))
-
-    if mode is None:
-        mode = spec['$schema'].split('/')[-2]
-    if mode not in ['vega', 'vega-lite']:
-        raise ValueError("mode must be either 'vega' or 'vega-lite'")
-
-    if mode == 'vega':
-        vega_version = vega_version if vega_version else str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json')
-        vega_lite_version = vega_lite_version if vega_lite_version else get_corresponding_vega_versions(vega_version).vega_lite
-        vega_embed_version = vega_embed_version if vega_embed_version else get_corresponding_vega_versions(vega_version).vega_embded
-    elif mode == 'vega-lite':
-        vega_lite_version = vega_lite_version if vega_lite_version else str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json')
-        vega_version = vega_version if vega_version else get_corresponding_vega_lite_versions(vega_lite_version).vega
-        vega_embed_version = vega_embed_version if vega_embed_version else get_corresponding_vega_lite_versions(vega_lite_version).vega_embded
-    else:
-        raise ValueError("Cannot determine vega/vega-lite version")
-
-    if vega_version is None:
-        # TODO: Depending on the mode, this can be found from the $schema
-        raise ValueError("must specify vega_version")
-
-    if vega_embed_version is None:
-        # TODO: Depending on mode/version, this can be determined programtically
-        raise ValueError("must specify vegaembed_version")
-
-    if mode == 'vega-lite' and vega_lite_version is None:
-        # TODO: Depending on the mode, this can be found from the $schema
-        raise ValueError("must specify vega-lite version")
 
     if web_driver == 'chrome':
         web_driver_class = selenium.webdriver.Chrome
@@ -177,6 +132,62 @@ def save(spec, file_name, mode=None, scale_factor=1, web_driver='chrome', driver
         if hasattr(os, 'geteuid') and (os.geteuid() == 0):
             webdriver_options.add_argument('--no-sandbox')
 
+    driver = web_driver_class(options=webdriver_options)
+
+    try:
+        driver.set_page_load_timeout(driver_timeout)
+        yield driver
+    finally:
+        driver.close()
+
+
+def save(spec, file_name, mode=None, scale_factor=1, vega_version=None, vega_lite_version=None, vega_embed_version=None,
+         driver=None, **kwargs):
+    """
+    Run your application.
+    :return:
+    """
+    print_version()
+
+    if driver and kwargs:
+        raise ValueError("WARN: kwargs cannot be applied to already instantiated driver.")
+
+    if not isinstance(file_name, six.string_types):
+        raise ValueError("Must specify file name: {}".format(supported_file_formats))
+
+    render_format = file_name.split('.')[-1]
+    if render_format not in supported_file_formats:
+        raise NotImplementedError("File extension (render_format) must be one of the following:"
+                                  " {}".format(supported_file_formats))
+
+    if mode is None:
+        mode = spec['$schema'].split('/')[-2]
+    if mode not in ['vega', 'vega-lite']:
+        raise ValueError("mode must be either 'vega' or 'vega-lite'")
+
+    if mode == 'vega':
+        versions = get_corresponding_vega_versions(str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json'))
+        vega_version = vega_version if vega_version else versions.vega
+        vega_lite_version = vega_lite_version if vega_lite_version else versions.vega_lite
+        vega_embed_version = vega_embed_version if vega_embed_version else versions.vega_embded
+    elif mode == 'vega-lite':
+        versions = get_corresponding_vega_lite_versions(str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json'))
+        vega_version = vega_version if vega_version else versions.vega
+        vega_lite_version = vega_lite_version if vega_lite_version else versions.vega_lite
+        vega_embed_version = vega_embed_version if vega_embed_version else versions.vega_embded
+    else:
+        raise ValueError("Cannot determine vega/vega-lite version")
+
+    if vega_version is None:
+        raise ValueError("must specify vega_version")
+
+    if vega_embed_version is None:
+        raise ValueError("must specify vegaembed_version")
+
+    if mode == 'vega-lite' and vega_lite_version is None:
+        # TODO: Depending on the mode, this can be found from the $schema
+        raise ValueError("must specify vega-lite version")
+
     # Update HTML file with the correct versions
     htmlfile = os.path.abspath(os.path.join(os.path.dirname(__file__), "js", "download_template.html"))
     new_html = HTML_TEMPLATE.format(vega_version=vega_version,
@@ -185,21 +196,15 @@ def save(spec, file_name, mode=None, scale_factor=1, web_driver='chrome', driver
     with open(htmlfile, 'w') as f:
         f.write(new_html)
 
-    driver = web_driver_class(options=webdriver_options)
-
-    try:
-        driver.set_page_load_timeout(driver_timeout)
+    if driver:
         driver.get("file://" + htmlfile)
-        online = driver.execute_script("return navigator.onLine")
-        if not online:
-            raise ValueError("Internet connection required for saving "
-                             "chart as {0}".format(render_format))
         driver_render = driver.execute_async_script(EXTRACT_CODE[render_format], spec, mode, scale_factor)
+    else:
+        with chart_driver(**kwargs) as driver:
+            driver.get("file://" + htmlfile)
+            driver_render = driver.execute_async_script(EXTRACT_CODE[render_format], spec, mode, scale_factor)
 
-        _save_render_to_location(file_name, driver_render, render_format)
-
-    finally:
-        driver.close()
+    _save_render_to_location(file_name, driver_render, render_format)
 
 
 def _save_render_to_location(file_name, render, render_format):
