@@ -10,6 +10,7 @@ python:
   - "3.7"
 before_install:
   - sudo apt-get install -y chromium-chromedriver
+  - sudo ln /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
 # command to install dependencies
 install:
   - pip install .
