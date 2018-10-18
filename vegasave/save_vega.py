@@ -8,8 +8,9 @@ The entry point for this application.
 import base64
 import json
 import os
-
 import six
+
+from vegasave.vega_verisons import get_corresponding_vega_versions, get_corresponding_vega_lite_versions
 
 __version__ = "0.1.0"
 
@@ -98,14 +99,15 @@ def print_version():
     print("Version: {}".format(__version__))
 
 
-def save_from_file(json_spec_file_name, mode, save_location):
+def save_from_file(json_spec_file_name, save_location, **kwargs):
     with open(json_spec_file_name) as f:
         data = json.load(f)
 
-    save(data, mode, save_location)
+    save(data, save_location, **kwargs)
 
 
-def save(spec, mode, file_name, scale_factor=1, web_driver='chrome', driver_timeout=20):
+def save(spec, file_name, mode=None, scale_factor=1, web_driver='chrome', driver_timeout=20,
+         vega_version=None, vega_lite_version=None, vega_embed_version=None):
     """
     Run your application.
     :return:
@@ -126,12 +128,24 @@ def save(spec, mode, file_name, scale_factor=1, web_driver='chrome', driver_time
 
     render_format = file_name.split('.')[-1]
     if render_format not in supported_file_formats:
-        raise NotImplementedError("File extension (render_format) must be one of the followin:"
+        raise NotImplementedError("File extension (render_format) must be one of the following:"
                                   " {}".format(supported_file_formats))
 
+    if mode is None:
+        mode = spec['$schema'].split('/')[-2]
     if mode not in ['vega', 'vega-lite']:
-        # TODO: mode can be found from the $schema!
         raise ValueError("mode must be either 'vega' or 'vega-lite'")
+
+    if mode == 'vega':
+        vega_version = vega_version if vega_version else str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json')
+        vega_lite_version = vega_lite_version if vega_lite_version else get_corresponding_vega_versions(vega_version).vega_lite
+        vega_embed_version = vega_embed_version if vega_embed_version else get_corresponding_vega_versions(vega_version).vega_embded
+    elif mode == 'vega-lite':
+        vega_lite_version = vega_lite_version if vega_lite_version else str(spec['$schema'].split('/')[-1]).lstrip('v').rstrip('.json')
+        vega_version = vega_version if vega_version else get_corresponding_vega_lite_versions(vega_lite_version).vega
+        vega_embed_version = vega_embed_version if vega_embed_version else get_corresponding_vega_lite_versions(vega_lite_version).vega_embded
+    else:
+        raise ValueError("Cannot determine vega/vega-lite version")
 
     if vega_version is None:
         # TODO: Depending on the mode, this can be found from the $schema

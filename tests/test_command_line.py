@@ -15,10 +15,12 @@ class TestStarter(unittest.TestCase):
         self.examples_dir = os.path.abspath(os.path.join(self.test_dir, "example_graphs"))
 
     def test_run(self):
-        command = self.save_command + [os.path.join(self.examples_dir, "gantt.vl2.json"), 'vega-lite', 'test_gg.png']
+        command = self.save_command + [os.path.join(self.examples_dir, "gantt.vl2.json"), 'test_gg.png']
         print(command)
         pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = pipe.communicate()
+        print(stdout)
+        print(stderr)
         # print(stdout)
         # self.assertEquals(stdout.splitlines(), "Version: 0.1.0\nHello World!\n".splitlines())
         self.assertEqual(pipe.returncode, 0)
