@@ -1,7 +1,7 @@
 site_name: vega-save
 repo_url: https://github.com/SyntaxRules/vega-save/
 theme: readthedocs
-pages:
+nav:
     - 'Overview': 'index.md'
     - 'User Guide':
         - 'Quick Start': 'quick-start.md'

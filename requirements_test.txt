@@ -1,5 +1,5 @@
 pytest
 pytest-cov
 pylint
-mkdocs
+mkdocs>=1.0.0
 recommonmark
