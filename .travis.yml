@@ -7,7 +7,6 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7"
 before_install:
   - sudo apt-get install -y chromium-chromedriver
   - sudo ln /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
@@ -20,6 +19,7 @@ install:
 # command to _save tests
 script:
   - pylint --ignore-patterns=test* vegasave || [[ $? == 0 || $? -ge 8 ]]
+  - python install -e .
   - python -m pytest . --cov=vegasave --cov-report term-missing --cov-report xml
 after_success:
   - codecov
