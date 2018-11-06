@@ -19,7 +19,7 @@ install:
 # command to _save tests
 script:
   - pylint --ignore-patterns=test* vegasave || [[ $? == 0 || $? -ge 8 ]]
-  - python install -e .
+  - pip install -e .
   - python -m pytest . --cov=vegasave --cov-report term-missing --cov-report xml
 after_success:
   - codecov
