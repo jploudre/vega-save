@@ -1,6 +1,16 @@
 # vega-save
 Save vega and vega-lite images in python purely offline.
 
+[![Build Status](https://travis-ci.org/SyntaxRules/vega-save.svg?branch=master)](https://travis-ci.org/SyntaxRules/vega-save)[![codecov](https://codecov.io/gh/SyntaxRules/vega-save/branch/master/graph/badge.svg)](https://codecov.io/gh/SyntaxRules/vega-save)[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=SyntaxRules/vega-save)](https://dependabot.com)[![Documentation Status](https://readthedocs.org/projects/vega-save/badge/?version=latest)](https://vega-save.readthedocs.io/en/latest/?badge=latest)
+
+
+
+Documentation: http://vega-save.readthedocs.io/en/latest/
+
+## Versioning
+
+This project uses [Semver](http://semver.org/) as its versioning scheme.
+
 ## Tests
 
 Basic acceptance tests are in the tests folder. You can run these tests by running `python setup.py test`. The unit tests are in line with the code. You can run all the tests with `python -m pytest .`.
