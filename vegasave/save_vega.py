@@ -209,7 +209,7 @@ def save(spec, file_name, mode=None, scale_factor=1, vega_version=None, vega_lit
 
 def _save_render_to_location(file_name, render, render_format):
     if render_format == 'png':
-        render = base64.decodebytes(render.split(',', 1)[1].encode())
+        render = base64.b64decode(render.split(',', 1)[1].encode())
         mode = 'wb'
     elif render_format == 'svg':
         mode = 'w'
