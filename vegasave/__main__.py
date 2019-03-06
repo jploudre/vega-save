@@ -11,7 +11,7 @@ from .save_vega import save_from_file
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('spec_file_name', type=str, help='Path to spec to compile into an image.')
-    parser.add_argument('file_name', type=str, help='Where this should be saved too.')
+    parser.add_argument('file_name', type=str, help='Where this should be saved to.')
 
     args = parser.parse_args()
 
